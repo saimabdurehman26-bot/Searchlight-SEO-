@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Check important on-page SEO signals and get practical suggestions to improve your page.">
+  <title>Searchlight — Simple SEO checker</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Searchlight home">
+      <span class="brand-mark" aria-hidden="true">✳</span>
+      <span>searchlight</span>
+    </a>
+    <span class="topbar-note">A clearer view of your on-page SEO</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">THE FREE ON-PAGE CHECKER</p>
+      <h1>Make your next page<br><span>easier to find.</span></h1>
+      <p class="intro-copy">Add your page details for a quick, friendly SEO check. No account, no tracking, no crawling.</p>
+    </section>
+
+    <section class="workspace" aria-label="SEO page checker">
+      <form id="seo-form" class="form-card">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">YOUR PAGE</p>
+            <h2>Page details</h2>
+          </div>
+          <span class="step-badge">01 / 01</span>
+        </div>
+
+        <label for="page_url">Page URL <span class="optional">Optional</span></label>
+        <input id="page_url" name="page_url" type="url" placeholder="https://example.com/your-topic">
+
+        <label for="title">SEO title <span class="field-hint">30–60 characters</span></label>
+        <input id="title" name="title" maxlength="200" placeholder="A clear title for your page">
+
+        <label for="description">Meta description <span class="field-hint">120–160 characters</span></label>
+        <textarea id="description" name="description" rows="3" maxlength="320" placeholder="Summarize what readers will find on this page..."></textarea>
+        <div class="character-count" id="description-count">0 characters</div>
+
+        <label for="keyword">Focus keyword</label>
+        <input id="keyword" name="keyword" maxlength="100" placeholder="e.g. indoor herb garden" required>
+
+        <label for="heading">Main heading (H1)</label>
+        <input id="heading" name="heading" maxlength="200" placeholder="The main heading readers see">
+
+        <label for="content">Page content <span class="field-hint">Paste your text</span></label>
+        <textarea id="content" name="content" rows="7" placeholder="Paste the main text from your page here..."></textarea>
+        <div class="character-count" id="word-count">0 words</div>
+
+        <button id="analyze-button" type="submit">
+          <span>Check my page</span><span aria-hidden="true">→</span>
+        </button>
+        <p class="privacy-note">Your text is processed by Searchlight and is not sent to a search engine.</p>
+      </form>
+
+      <aside class="result-card" aria-live="polite" aria-label="SEO analysis results">
+        <div id="empty-state" class="empty-state">
+          <div class="orbit" aria-hidden="true"><span>✳</span></div>
+          <p class="eyebrow">YOUR RESULTS</p>
+          <h2>A little clarity<br>goes a long way.</h2>
+          <p>Run a check to see your score and a short list of improvements you can make.</p>
+          <div class="mini-stats">
+            <span><b>7</b> on-page checks</span>
+            <span><b>~1 min</b> to get started</span>
+          </div>
+        </div>
+        <div id="results" class="results" hidden>
+          <p class="eyebrow">YOUR SEO SNAPSHOT</p>
+          <div class="score-row">
+            <div class="score-number"><span id="score">0</span><small>/ 100</small></div>
+            <div>
+              <h2 id="score-title">Looking good</h2>
+              <p id="score-caption">Here are your page checks.</p>
+            </div>
+          </div>
+          <div class="score-track" aria-label="SEO score"><span id="score-bar"></span></div>
+          <div class="check-list" id="check-list"></div>
+          <button type="button" class="reset-button" id="reset-button">← Edit page details</button>
+        </div>
+        <p id="error-message" class="error-message" role="alert" hidden></p>
+      </aside>
+    </section>
+  </main>
+  <footer>
+    <span>Searchlight SEO checker</span>
+    <span>Practical checks. Your words stay yours.</span>
+  </footer>
+</body>
+</html>
