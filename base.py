@@ -1,103 +1,57 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Iterable
-from contextlib import AbstractContextManager as ContextManager
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING
 
-from pip._vendor.packaging.version import Version
-
-from pip._internal.locations import get_scheme
-from pip._internal.metadata import get_default_environment, get_environment
-from pip._internal.utils.packaging import get_requirement
+from pip._internal.metadata.base import BaseDistribution
+from pip._internal.req import InstallRequirement
 
 if TYPE_CHECKING:
-    from pip._internal.req.req_install import InstallRequirement
+    from pip._internal.build_env import BuildEnvironmentInstaller, BuildIsolationMode
 
 
-BuildIsolationMode = Literal["off", "virtual", "venv"]
+class AbstractDistribution(metaclass=abc.ABCMeta):
+    """A base class for handling installable artifacts.
 
+    The requirements for anything installable are as follows:
 
-def _dedup(a: str, b: str) -> tuple[str] | tuple[str, str]:
-    return (a, b) if a != b else (a,)
+     - we must be able to determine the requirement name
+       (or we can't correctly handle the non-upgrade case).
 
+     - for packages with setup requirements, we must also be able
+       to determine their requirements without installing additional
+       packages (for the same reason as run-time dependencies)
 
-class Prefix:
-    # TODO: simplify this data model when the legacy subprocess installer is removed
-    def __init__(self, path: str, *, venv_executable: str | None = None) -> None:
-        self.path = path
-        self.setup = False
-        scheme = get_scheme("", prefix=path)
-        self.bin_dir = scheme.scripts
-        self.lib_dirs = _dedup(scheme.purelib, scheme.platlib)
-        self.venv_executable = venv_executable
+     - we must be able to create a Distribution object exposing the
+       above metadata.
 
-
-class BuildEnvironmentInstaller(Protocol):
-    """
-    Interface for installing build dependencies into an isolated build
-    environment.
+     - if we need to do work in the build tracker, we must be able to generate a unique
+       string to identify the requirement in the build tracker.
     """
 
-    def install(
-        self,
-        requirements: Iterable[str],
-        prefix: Prefix,
-        *,
-        kind: str,
-        for_req: InstallRequirement | None,
-    ) -> None: ...
+    def __init__(self, req: InstallRequirement) -> None:
+        super().__init__()
+        self.req = req
 
+    @property
+    @abc.abstractmethod
+    def build_tracker_id(self) -> str | None:
+        """A string that uniquely identifies this requirement to the build tracker.
 
-class BuildEnvironment(ContextManager[None], metaclass=abc.ABCMeta):
-    """Creates and manages an isolated environment to install build deps"""
-
-    lib_dirs: list[str]
-    python_executable: str
+        If None, then this dist has no work to do in the build tracker, and
+        ``.prepare_distribution_metadata()`` will not be called."""
+        raise NotImplementedError()
 
     @abc.abstractmethod
-    def __init__(self, installer: BuildEnvironmentInstaller): ...
-
-    def check_requirements(
-        self, reqs: Iterable[str]
-    ) -> tuple[set[tuple[str, str]], set[str]]:
-        """Return 2 sets:
-        - conflicting requirements: set of (installed, wanted) reqs tuples
-        - missing requirements: set of reqs
-        """
-        missing = set()
-        conflicting = set()
-        if reqs:
-            env = (
-                get_environment(self.lib_dirs)
-                if hasattr(self, "lib_dirs")
-                else get_default_environment()
-            )
-            for req_str in reqs:
-                req = get_requirement(req_str)
-                # We're explicitly evaluating with an empty extra value, since build
-                # environments are not provided any mechanism to select specific extras.
-                if req.marker is not None and not req.marker.evaluate({"extra": ""}):
-                    continue
-                dist = env.get_distribution(req.name)
-                if not dist:
-                    missing.add(req_str)
-                    continue
-                if isinstance(dist.version, Version):
-                    installed_req_str = f"{req.name}=={dist.version}"
-                else:
-                    installed_req_str = f"{req.name}==={dist.version}"
-                if not req.specifier.contains(dist.version, prereleases=True):
-                    conflicting.add((installed_req_str, req_str))
-                # FIXME: Consider direct URL?
-        return conflicting, missing
+    def get_metadata_distribution(self) -> BaseDistribution:
+        raise NotImplementedError()
 
     @abc.abstractmethod
-    def install_requirements(
+    def prepare_distribution_metadata(
         self,
-        requirements: Iterable[str],
-        prefix_as_string: str,
-        *,
-        kind: str,
-        for_req: InstallRequirement | None = None,
-    ) -> None: ...
+        build_env_installer: BuildEnvironmentInstaller,
+        build_isolation: BuildIsolationMode,
+        check_build_deps: bool,
+        allow_editables: bool,
+    ) -> None:
+        raise NotImplementedError()
