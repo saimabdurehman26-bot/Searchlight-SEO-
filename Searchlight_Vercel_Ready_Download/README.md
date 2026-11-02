@@ -25,7 +25,7 @@ Requires Python 3.12 or a compatible Python 3 version. From this folder run:
 python app.py
 ```
 
-Then open http://127.0.0.1:8000.
+Then open https://searchlight-seo.vercel.app/
 
 ## What the checker does
 
